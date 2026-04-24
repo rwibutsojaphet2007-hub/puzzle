@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sliding Puzzle</title>
+<style>
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0f1115;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Layout */
+.container {
+  display: flex;
+  gap: 40px;
+}
+
+/* Game Section */
+.game {
+  text-align: center;
+}
+
+h1 {
+  color: #00d084;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  gap: 10px;
+  padding: 15px;
+  background: #1c1f26;
+  border-radius: 12px;
+}
+
+.tile {
+  width: 80px;
+  height: 80px;
+  background: #33b07a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tile:hover {
+  transform: scale(1.05);
+}
+
+.empty {
+  background: transparent;
+  cursor: default;
+}
+
+/* Info */
+.info {
+  margin-top: 15px;
+}
+
+.badge {
+  background: #1c1f26;
+  padding: 8px 14px;
+  border-radius: 20px;
+  margin: 5px;
+  display: inline-block;
+  font-size: 14px;
+}
+
+/* Buttons */
+.controls {
+  margin-top: 10px;
+}
+
+button, select {
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+  background: #1c1f26;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00d084;
+}
+
+/* Leaderboard */
+.leaderboard {
+  background: #1c1f26;
+  padding: 20px;
+  border-radius: 12px;
+  width: 220px;
+  text-align: center;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- GAME -->
+  <div class="game">
+    <h1>Sliding Puzzle</h1>
+    <div class="subtitle">Arrange the numbers in order from 1 to 15</div>
+
+    <div id="grid" class="grid"></div>
+
+    <div class="info">
+      <span class="badge" id="time">Time: 0s</span>
+      <span class="badge" id="moves">Moves: 0</span>
+      <span class="badge">Grid 4x4</span>
+    </div>
+
+    <div class="controls">
+      <select>
+        <option>Medium</option>
+      </select>
+      <button onclick="restart()">Restart</button>
+      <button onclick="newGame()">New Game</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="leaderboard">
+    <h3>Leaderboard</h3>
+    <div class="error">Request failed with status code 500</div>
+  </div>
+
+</div>
+
+<script>
+let tiles = [];
+let emptyIndex = 15;
+let moves = 0;
+let time = 0;
+let timer;
+
+/* Initialize */
+function init() {
+  tiles = [...Array(15).keys()].map(x => x + 1);
+  tiles.push(null);
+
+  shuffle();
+  render();
+
+  moves = 0;
+  time = 0;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    time++;
+    document.getElementById("time").innerText = "Time: " + time + "s";
+  }, 1000);
+}
+
+/* Shuffle */
+function shuffle() {
+  for (let i = tiles.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+  }
+  emptyIndex = tiles.indexOf(null);
+}
+
+/* Render grid */
+function render() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  tiles.forEach((num, index) => {
+    const div = document.createElement("div");
+    div.classList.add("tile");
+
+    if (num === null) {
+      div.classList.add("empty");
+    } else {
+      div.innerText = num;
+      div.onclick = () => move(index);
+    }
+
+    grid.appendChild(div);
+  });
+
+  document.getElementById("moves").innerText = "Moves: " + moves;
+}
+
+/* Move tile */
+function move(index) {
+  const validMoves = [
+    emptyIndex - 1,
+    emptyIndex + 1,
+    emptyIndex - 4,
+    emptyIndex + 4
+  ];
+
+  if (validMoves.includes(index)) {
+    [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+    emptyIndex = index;
+    moves++;
+    render();
+
+    if (isSolved()) {
+      clearInterval(timer);
+      setTimeout(() => alert("🎉 You solved it!"), 200);
+    }
+  }
+}
+
+/* Check win */
+function isSolved() {
+  for (let i = 0; i < 15; i++) {
+    if (tiles[i] !== i + 1) return false;
+  }
+  return true;
+}
+
+/* Controls */
+function restart() {
+  init();
+}
+
+function newGame() {
+  init();
+}
+
+/* Start game */
+init();
+</script>
+
+</body>
+</html>
